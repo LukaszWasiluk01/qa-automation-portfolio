@@ -9,6 +9,37 @@
 			"name": "Auth",
 			"item": [
 				{
+					"name": "Register User (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201 or 400 (if exists)\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([201, 400]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@issuetracker.com\",\n  \"password\": \"TestPassword123!\",\n  \"role\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "auth", "register" ]
+						}
+					}
+				},
+				{
 					"name": "Login User",
 					"event": [
 						{
@@ -94,7 +125,7 @@
 									"pm.test(\"Response has correct properties\", function () {",
 									"    var jsonData = pm.response.json();",
 									"    pm.expect(jsonData).to.have.property('id');",
-									"    pm.expect(jsonData.status).to.eql('Open');",
+									"    pm.expect(jsonData.status).to.eql(0);",
 									"    pm.environment.set(\"issue_id\", jsonData.id);",
 									"});"
 								],
@@ -110,12 +141,39 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"title\": \"API Test Issue\",\n  \"description\": \"Created via Postman\",\n  \"priority\": \"High\"\n}"
+							"raw": "{\n  \"title\": \"API Test Issue\",\n  \"description\": \"Created via Postman\",\n  \"priority\": 2\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/issues",
 							"host": [ "{{baseUrl}}" ],
 							"path": [ "api", "issues" ]
+						}
+					}
+				},
+				{
+					"name": "Get Issue By ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/issues/{{issue_id}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "issues", "{{issue_id}}" ]
 						}
 					}
 				},
@@ -142,7 +200,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"status\": \"InProgress\"\n}"
+							"raw": "{\n  \"status\": 1\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/issues/{{issue_id}}/status",
