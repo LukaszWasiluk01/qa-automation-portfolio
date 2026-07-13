@@ -1,0 +1,184 @@
+{
+	"info": {
+		"name": "QA Portfolio - Issue Tracker API",
+		"description": "API collection for the Issue Tracker application including auth, CRUD operations, and test scripts.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has JWT token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('token');",
+									"    pm.environment.set(\"jwt_token\", jsonData.token);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@issuetracker.com\",\n  \"password\": \"TestPassword123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "auth", "login" ]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Issues",
+			"item": [
+				{
+					"name": "Get All Issues",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Response is an array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/issues",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "issues" ]
+						}
+					}
+				},
+				{
+					"name": "Create New Issue",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"pm.test(\"Response has correct properties\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData.status).to.eql('Open');",
+									"    pm.environment.set(\"issue_id\", jsonData.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"API Test Issue\",\n  \"description\": \"Created via Postman\",\n  \"priority\": \"High\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/issues",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "issues" ]
+						}
+					}
+				},
+				{
+					"name": "Update Issue Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"InProgress\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/issues/{{issue_id}}/status",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "issues", "{{issue_id}}", "status" ]
+						}
+					}
+				},
+				{
+					"name": "Delete Issue",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204 No Content\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/issues/{{issue_id}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "issues", "{{issue_id}}" ]
+						}
+					}
+				}
+			]
+		}
+	]
+}
