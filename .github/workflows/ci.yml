@@ -22,6 +22,8 @@ jobs:
       run: dotnet build src/IssueTracker.API/IssueTracker.API.csproj -c Release
 
     - name: Run xUnit Integration Tests
+      env:
+        ASPNETCORE_ENVIRONMENT: Testing
       run: dotnet test src/IssueTracker.Tests/IssueTracker.Tests.csproj -c Release
 
     - name: Setup Node.js
