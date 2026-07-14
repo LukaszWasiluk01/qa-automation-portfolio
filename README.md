@@ -1,45 +1,37 @@
 # QA Automation Portfolio - Issue Tracker
 
-[![CI Pipeline](https://github.com/LukaszWasiluk01/qa-automation-portfolio/actions/workflows/ci.yml/badge.svg)]([https://github.com/LukaszWasiluk01/qa-automation-portfolio/actions](https://github.com/LukaszWasiluk01/qa-automation-portfolio/actions))
+[![CI Pipeline](https://github.com/LukaszWasiluk01/qa-automation-portfolio/actions/workflows/ci.yml/badge.svg)](https://github.com/LukaszWasiluk01/qa-automation-portfolio/actions)
 
 A comprehensive Quality Assurance portfolio demonstrating a complete software testing lifecycle (STLC) and modern test automation practices. The project features a custom-built Issue Tracker REST API and a fully automated testing pipeline.
 
-## 🎯 Skills Demonstrated
+## 🌟 Portfolio Highlights
+*   **End-to-end QA workflow** from manual test planning to CI automation.
+*   **Realistic Issue Tracker API** with authentication (JWT) and role-based access control (RBAC).
+*   **Automated test suite** executed seamlessly in GitHub Actions using InMemory databases.
+*   **Clear separation of concerns** between manual tests, API tests, SQL validation, and E2E automation (Page Object Model).
 
-*   **Manual test design and documentation** (Test Plans, Test Cases, Bug Reports, Exploratory Notes)
-*   **API testing** with Postman and Playwright
-*   **UI automation** with Playwright and TypeScript
-*   **Design Patterns:** Page Object Model (POM) and Data Isolation (Fixtures)
-*   **Backend integration testing** with xUnit & WebApplicationFactory
-*   **SQL** test data validation
-*   **CI/CD** with GitHub Actions (Dynamic Environment configurations, Health Checks, Artifacts)
-
-## 📊 Test Coverage
-
-This portfolio covers:
-*   **Authentication scenarios:** valid login, invalid login, authorization checks.
-*   **API Tests:** Issue CRUD operations through direct endpoints.
-*   **UI Smoke Tests:** Core user flows via browser.
-*   **Integration Tests:** Backend .NET endpoints validation.
-*   **Database:** SQL validation queries for test data verification.
+## 🎯 Testing Scope
+*   **Manual QA documentation:** Test plan, 25+ test cases, bug reports, risk analysis, and exploratory testing notes.
+*   **API testing:** Postman collection with auth flow and automated test scripts.
+*   **SQL validation:** Sample queries for checking issue status, users, and data consistency.
+*   **Backend integration tests:** xUnit + WebApplicationFactory covering core API endpoints.
+*   **E2E/API automation:** Playwright + TypeScript + Page Object Model testing UI and API layers.
+*   **CI/CD:** GitHub Actions pipeline running the backend, applying environment configurations, and executing Playwright tests.
 
 ## 🧭 How to Review This Portfolio
-
 Recommended review order for recruiters and technical reviewers:
 1.  Read `/docs/TEST_PLAN.md` for the overarching test strategy.
-2.  Check `/docs/TEST_CASES.md` for structured manual test design.
+2.  Check `/docs/TEST_CASES.md` for structured manual test design (25+ scenarios).
 3.  Review `/postman` for API testing collections.
 4.  Explore `/e2e/tests` and `/e2e/pages` to evaluate the Playwright automation framework.
-5.  Check `.github/workflows/ci.yml` for the CI/CD execution flow and environment management.
+5.  Check `.github/workflows/ci.yml` for the CI/CD execution flow and active health checks.
 
 ## 🛠️ Tech Stack
-
 *   **Backend:** ASP.NET Core Web API, C#, Entity Framework Core
 *   **Database:** SQL Server LocalDB / In-Memory DB (CI)
 *   **Integration Testing:** xUnit, WebApplicationFactory
-*   **E2E & UI Automation:** Playwright, TypeScript, Page Object Model (POM)
-*   **API Testing:** Postman, Playwright API Requests
-*   **CI/CD:** GitHub Actions
+*   **E2E & UI Automation:** Playwright, TypeScript, POM
+*   **CI/CD:** GitHub Actions, Node.js 22 LTS
 
 ## 🚀 How to Run Locally
 
@@ -62,14 +54,14 @@ dotnet test
 ```
 
 ### 3. Run Playwright E2E Tests
-*Ensure the API is running in the background before executing these tests.*
+*Ensure the API is running before executing these tests.*
 ```bash
 cd e2e
 npm ci
 npx playwright install
 npm test
 ```
-*To view the HTML report after tests finish:*
+*To view the HTML report:*
 ```bash
 npm run report
 ```

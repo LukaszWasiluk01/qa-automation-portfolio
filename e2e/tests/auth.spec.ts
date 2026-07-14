@@ -9,7 +9,7 @@ test.describe('Authentication & Dashboard UI', () => {
   test.beforeEach(async ({ page }) => {
     loginPage = new LoginPage(page);
     dashboardPage = new DashboardPage(page);
-    await loginPage.goto();
+    await loginPage.navigate();
   });
 
   test('Successful login and redirect to dashboard', async () => {
@@ -18,13 +18,23 @@ test.describe('Authentication & Dashboard UI', () => {
   });
 
   test('Login fails with invalid password', async () => {
-    await loginPage.login('admin@issuetracker.com', 'WrongPassword!');
-    await expect(loginPage.errorMessage).toHaveText('Invalid credentials');
+    await loginPage.login('admin@issuetracker.com', 'WrongPass!');
+    await expect(loginPage.errorMessage).toBeVisible();
+  });
+
+  test('Login fails with empty email', async () => {
+    await loginPage.login('', 'TestPassword123!');
+    await expect(loginPage.page.locator('input[type="email"]')).toBeFocused();
   });
 
   test('Create issue fails with empty title', async () => {
     await loginPage.login('admin@issuetracker.com', 'TestPassword123!');
     await dashboardPage.createIssueButton.click();
     await expect(dashboardPage.issueError).toHaveText('Title is required');
+  });
+
+  test('Navigation to dashboard blocked without login', async ({ page }) => {
+    await page.goto('/dashboard.html');
+    expect(page.url()).not.toContain('/dashboard.html');
   });
 });

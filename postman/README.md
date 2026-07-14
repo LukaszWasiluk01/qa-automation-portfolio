@@ -1,10 +1,11 @@
 # Postman API Tests
 
-This folder contains the Postman collection and environment files used to test the backend API of the Issue Tracker application.
+This directory contains Postman collections and environments for testing the Issue Tracker REST API.
 
-## How to use:
-1. Import `IssueTracker.postman_collection.json` into Postman.
-2. Import `local.postman_environment.json` into Postman.
-3. Make sure the local ASP.NET Core API is running on `http://localhost:5000`.
-4. Run the `Login User` request first. The test script will automatically extract the JWT token and save it to the environment variables.
-5. All subsequent requests (GET, POST, PATCH, DELETE) will use this token for authorization.
+## Setup
+
+1. Import the collection `IssueTracker.postman_collection.json` into your Postman workspace.
+2. Import the environment `local.postman_environment.json`.
+3. Ensure the ASP.NET Core backend API is running locally on `http://localhost:5141`.
+4. Select the `local` environment in Postman.
+5. Run the collection manually or via Postman Collection Runner. The scripts include automatic JWT token extraction and assignment to subsequent requests.

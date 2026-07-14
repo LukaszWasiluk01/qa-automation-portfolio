@@ -1,38 +1,41 @@
-# Test Cases
+# Test Cases - Issue Tracker
 
-This document contains a suite of test cases designed for the **Issue Tracker** application. The test cases cover Authentication, Issue Management (CRUD), and Role-Based Access Control (RBAC).
+This document contains a structured suite of manual test cases covering Authentication, Issue Management (CRUD), Role-Based Access Control (RBAC), and Edge Cases.
 
-## 1. Authentication (Auth)
+## 1. Authentication (AUTH)
+| ID | Title | Preconditions | Steps | Expected Result |
+|---|---|---|---|---|
+| TC-001 | Successful Login | User exists in DB | 1. Enter valid email.<br>2. Enter valid password.<br>3. Click Login. | HTTP 200 / Redirect to Dashboard. Token generated. |
+| TC-002 | Login with Invalid Password | User exists in DB | 1. Enter valid email.<br>2. Enter wrong password.<br>3. Click Login. | HTTP 401 Unauthorized. Error message displayed. |
+| TC-003 | Login with Unregistered Email | API is running | 1. Enter unregistered email.<br>2. Enter any password.<br>3. Click Login. | HTTP 401 Unauthorized. Error message displayed. |
+| TC-004 | Login with Missing Fields | API is running | 1. Leave email empty.<br>2. Click Login. | Validation error (HTTP 400). |
+| TC-005 | Token Expiration | User is logged in | 1. Wait for token expiry (e.g., 1 hour).<br>2. Attempt to fetch issues. | HTTP 401 Unauthorized. User logged out. |
 
-| ID | Title | Preconditions | Steps | Expected Result | Type |
-|---|---|---|---|---|---|
-| **TC-AUTH-01** | Successful login with valid credentials | User account exists | 1. Navigate to login page<br>2. Enter valid email and password<br>3. Click 'Login' | User is redirected to dashboard; Auth token is generated. | Positive |
-| **TC-AUTH-02** | Login fails with invalid password | User account exists | 1. Navigate to login page<br>2. Enter valid email and invalid password<br>3. Click 'Login' | Error message "Invalid credentials" is displayed; User remains on login page. | Negative |
-| **TC-AUTH-03** | Login fails with unregistered email | None | 1. Navigate to login page<br>2. Enter unregistered email and password<br>3. Click 'Login' | Error message "User not found" is displayed. | Negative |
-| **TC-AUTH-04** | Successful logout | User is logged in | 1. Click 'Profile' menu<br>2. Click 'Logout' | User is redirected to login page; Auth token is cleared from local storage. | Positive |
-| **TC-AUTH-05** | Accessing protected route without token | User is not logged in | 1. Manually enter dashboard URL in browser | User is redirected to login page; 401 Unauthorized (if via API). | Security |
+## 2. Issue Management (ISSUE)
+| ID | Title | Preconditions | Steps | Expected Result |
+|---|---|---|---|---|
+| TC-006 | Create Issue - Valid Data | Logged in | 1. Enter Title.<br>2. Enter Description.<br>3. Submit. | HTTP 201 Created. Issue appears in the list. |
+| TC-007 | Create Issue - Missing Title | Logged in | 1. Leave Title blank.<br>2. Submit. | HTTP 400 Bad Request. Validation error. |
+| TC-008 | Create Issue - Empty Description | Logged in | 1. Enter Title.<br>2. Leave Description blank.<br>3. Submit. | HTTP 201 Created (Description is optional). |
+| TC-009 | Retrieve Issue List | Logged in, Issues exist | 1. Send GET request to `/api/issues`. | HTTP 200 OK. Returns JSON array of issues. |
+| TC-010 | Retrieve Single Issue | Logged in, Issue ID exists | 1. Send GET request to `/api/issues/{id}`. | HTTP 200 OK. Returns specific issue details. |
+| TC-011 | Retrieve Non-existent Issue | Logged in | 1. Send GET request with invalid ID. | HTTP 404 Not Found. |
+| TC-012 | Update Issue Title | Logged in as creator | 1. Send PUT request with new Title. | HTTP 204 No Content / 200 OK. Title updated. |
+| TC-013 | Update Issue Status | Logged in as creator | 1. Change status from Open to InProgress. | Status successfully updated in DB. |
+| TC-014 | Invalid Status Transition | Logged in as creator | 1. Change status from Open directly to Closed. | Validation error / HTTP 400 Bad Request. |
+| TC-015 | Delete Issue | Logged in as creator | 1. Send DELETE request to `/api/issues/{id}`. | HTTP 204 No Content. Issue removed. |
+| TC-016 | Filter Issues by Status | Logged in | 1. Send GET request with `?status=Open`. | Returns only issues with Open status. |
+| TC-017 | Sort Issues by Priority | Logged in | 1. Send GET request with `?sort=priority`. | Returns issues ordered by priority (High to Low). |
 
-## 2. Issue Management (CRUD)
-
-| ID | Title | Preconditions | Steps | Expected Result | Type |
-|---|---|---|---|---|---|
-| **TC-ISSUE-01** | Create a new issue successfully | User is logged in | 1. Click 'New Issue'<br>2. Fill Title, Description, Priority<br>3. Click 'Save' | Issue is created and displayed in the list with 'Open' status. | Positive |
-| **TC-ISSUE-02** | Create issue fails with empty title | User is logged in | 1. Click 'New Issue'<br>2. Leave Title empty<br>3. Fill Description<br>4. Click 'Save' | Validation error "Title is required" is displayed; Issue is not saved. | Negative |
-| **TC-ISSUE-03** | Create issue fails with exceedingly long title | User is logged in | 1. Click 'New Issue'<br>2. Enter Title > 255 characters<br>3. Click 'Save' | Validation error "Title exceeds maximum length" is displayed. | Boundary |
-| **TC-ISSUE-04** | View list of all issues | User is logged in; Issues exist | 1. Navigate to Dashboard | List of issues is displayed showing Title, Status, and Priority. | Positive |
-| **TC-ISSUE-05** | View details of a specific issue | User is logged in; Issue exists | 1. Click on an existing issue from the list | Issue details page opens with full description and history. | Positive |
-| **TC-ISSUE-06** | Update an existing issue | User is logged in; Issue exists | 1. Open issue details<br>2. Click 'Edit'<br>3. Change Title<br>4. Click 'Save' | Issue is updated; New title is visible in the issue details. | Positive |
-| **TC-ISSUE-07** | Change issue status to 'InProgress' | User is logged in; Issue is 'Open' | 1. Open issue details<br>2. Change status dropdown to 'InProgress'<br>3. Save | Status is updated to 'InProgress'. | Positive |
-| **TC-ISSUE-08** | Change issue status to 'Resolved' | User is logged in; Issue is 'InProgress' | 1. Open issue details<br>2. Change status dropdown to 'Resolved'<br>3. Save | Status is updated to 'Resolved'. | Positive |
-| **TC-ISSUE-09** | Delete an issue successfully | User logged in as Admin | 1. Open issue details<br>2. Click 'Delete'<br>3. Confirm deletion | Issue is removed from the system and no longer visible in the list. | Positive |
-| **TC-ISSUE-10** | Attempt to delete a non-existent issue | User logged in as Admin | 1. Send DELETE request via API with invalid ID | 404 Not Found error is returned. | Negative |
-
-## 3. Role-Based Access Control (RBAC)
-
-| ID | Title | Preconditions | Steps | Expected Result | Type |
-|---|---|---|---|---|---|
-| **TC-RBAC-01** | Developer can change issue status | Logged in as Developer | 1. Open assigned issue<br>2. Change status to 'InProgress' | Status update is successful. | Positive |
-| **TC-RBAC-02** | Developer cannot delete an issue | Logged in as Developer | 1. Open an issue | 'Delete' button is hidden/disabled; API returns 403 Forbidden on DELETE. | Security |
-| **TC-RBAC-03** | Tester can create a new issue | Logged in as Tester | 1. Click 'New Issue'<br>2. Fill details and save | Issue is created successfully. | Positive |
-| **TC-RBAC-04** | Tester can change issue to 'Closed' | Logged in as Tester; Issue is 'Resolved' | 1. Open resolved issue<br>2. Change status to 'Closed' | Status update is successful. | Positive |
-| **TC-RBAC-05** | Admin can assign roles to users | Logged in as Admin | 1. Navigate to User Management<br>2. Change user role to Developer | User role is successfully updated. | Positive |
+## 3. Role-Based Access Control (RBAC) & Edge Cases
+| ID | Title | Preconditions | Steps | Expected Result |
+|---|---|---|---|---|
+| TC-018 | Delete Issue - Unauthorized | Logged in as Standard User | 1. Attempt to delete an issue created by another user. | HTTP 403 Forbidden. |
+| TC-019 | Delete Issue - Admin Access | Logged in as Admin | 1. Delete an issue created by a Standard User. | HTTP 204 No Content. Successful deletion. |
+| TC-020 | Access API without Token | API is running | 1. Send GET `/api/issues` without Auth header. | HTTP 401 Unauthorized. |
+| TC-021 | SQL Injection Attempt | API is running | 1. Enter `' OR 1=1;--` in Email field. | HTTP 400/401. Handled safely by EF Core. |
+| TC-022 | XSS Payload in Title | Logged in | 1. Enter `<script>alert('xss')</script>` as Title. | Input is sanitized or safely encoded in UI. |
+| TC-023 | Out-of-bounds Priority | Logged in | 1. Send POST with `Priority: 999`. | HTTP 400 Bad Request. |
+| TC-024 | Malformed JSON Payload | Logged in | 1. Send POST with broken JSON syntax. | HTTP 400 Bad Request. |
+| TC-025 | Concurrent Updates | Logged in | 1. Update same issue simultaneously from two clients. | Concurrency conflict handled (HTTP 409). |
+| TC-026 | Huge Payload | Logged in | 1. Send Description with 10MB text. | HTTP 413 Payload Too Large / HTTP 400. |
