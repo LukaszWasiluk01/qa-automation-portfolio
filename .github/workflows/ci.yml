@@ -29,11 +29,11 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '24'
+        node-version: '22'
 
     - name: Install Frontend Dependencies
       working-directory: ./e2e
-      run: npm install
+      run: npm ci
 
     - name: Install Playwright Browsers
       working-directory: ./e2e
@@ -45,12 +45,22 @@ jobs:
         ASPNETCORE_ENVIRONMENT: Testing
       run: dotnet run --project src/IssueTracker.API/IssueTracker.API.csproj --no-launch-profile --urls "http://localhost:5141" &
 
-    - name: Wait for API
-      run: sleep 15
+    - name: Wait for API to be ready
+      run: |
+        for i in {1..30}; do
+          if curl -s http://localhost:5141/swagger/index.html > /dev/null; then
+            echo "API is up and running!"
+            exit 0
+          fi
+          echo "Waiting for API to start..."
+          sleep 2
+        done
+        echo "API did not start in time."
+        exit 1
 
     - name: Run Playwright Tests
       working-directory: ./e2e
-      run: npx playwright test
+      run: npm test
 
     - name: Upload Playwright Report
       uses: actions/upload-artifact@v4
