@@ -52,6 +52,21 @@ namespace IssueTracker.API
                 }
             });
 
+            using (var scope = builder.Services.BuildServiceProvider().CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                if (isGitHubActions)
+                {
+                    context.Users.Add(new IssueTracker.API.Models.User
+                    {
+                        Email = "admin@issuetracker.com",
+                        PasswordHash = "TestPassword123!",
+                        Role = IssueTracker.API.Models.UserRole.Admin
+                    });
+                    context.SaveChanges();
+                }
+            }
+
             var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is missing");
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
