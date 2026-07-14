@@ -43,7 +43,7 @@ jobs:
       env:
         ASPNETCORE_URLS: http://localhost:5141
         ASPNETCORE_ENVIRONMENT: Testing
-      run: dotnet run --project src/IssueTracker.API/IssueTracker.API.csproj &
+      run: dotnet run --project src/IssueTracker.API/IssueTracker.API.csproj --urls "http://localhost:5141" &
 
     - name: Wait for API
       run: sleep 15
