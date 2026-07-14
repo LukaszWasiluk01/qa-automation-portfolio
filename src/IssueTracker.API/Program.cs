@@ -38,11 +38,11 @@ namespace IssueTracker.API
                 });
             });
 
-            var isGitHubActions = Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true";
+            var isTestingEnvironment = builder.Environment.IsEnvironment("Testing");
 
             builder.Services.AddDbContext<AppDbContext>(options =>
             {
-                if (isGitHubActions)
+                if (isTestingEnvironment)
                 {
                     options.UseInMemoryDatabase("TestDb");
                 }
@@ -51,21 +51,6 @@ namespace IssueTracker.API
                     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
                 }
             });
-
-            using (var scope = builder.Services.BuildServiceProvider().CreateScope())
-            {
-                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                if (isGitHubActions)
-                {
-                    context.Users.Add(new IssueTracker.API.Models.User
-                    {
-                        Email = "admin@issuetracker.com",
-                        PasswordHash = "TestPassword123!",
-                        Role = IssueTracker.API.Models.UserRole.Admin
-                    });
-                    context.SaveChanges();
-                }
-            }
 
             var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is missing");
 
@@ -85,6 +70,21 @@ namespace IssueTracker.API
                 });
 
             var app = builder.Build();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                if (isTestingEnvironment)
+                {
+                    context.Users.Add(new IssueTracker.API.Models.User
+                    {
+                        Email = "admin@issuetracker.com",
+                        PasswordHash = "TestPassword123!",
+                        Role = IssueTracker.API.Models.UserRole.Admin
+                    });
+                    context.SaveChanges();
+                }
+            }
 
             if (app.Environment.IsDevelopment())
             {
