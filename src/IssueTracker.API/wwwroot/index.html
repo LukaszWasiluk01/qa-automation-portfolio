@@ -1,0 +1,74 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Issue Tracker</title>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="login-section">
+        <h2>Login</h2>
+        <input type="email" id="email" data-testid="email-input" placeholder="Email" /><br><br>
+        <input type="password" id="password" data-testid="password-input" placeholder="Password" /><br><br>
+        <button data-testid="login-button" onclick="login()">Login</button>
+        <p id="error-message" data-testid="error-message" style="color:red;"></p>
+    </div>
+
+    <div id="dashboard-section" class="hidden">
+        <h2 data-testid="dashboard-header">Dashboard</h2>
+        <input type="text" id="issue-title" data-testid="issue-title-input" placeholder="Issue Title" /><br><br>
+        <button data-testid="create-issue-button" onclick="createIssue()">Create Issue</button>
+        <button data-testid="logout-button" onclick="logout()">Logout</button>
+        <p id="issue-error" data-testid="issue-error" style="color:red;"></p>
+    </div>
+
+    <script>
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('token', data.token);
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('dashboard-section').classList.remove('hidden');
+            } else {
+                document.getElementById('error-message').innerText = 'Invalid credentials';
+            }
+        }
+
+        function createIssue() {
+            const title = document.getElementById('issue-title').value;
+            if (!title) {
+                document.getElementById('issue-error').innerText = 'Title is required';
+            } else {
+                document.getElementById('issue-error').innerText = 'Issue created!';
+                document.getElementById('issue-title').value = '';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            document.getElementById('dashboard-section').classList.add('hidden');
+            document.getElementById('login-section').classList.remove('hidden');
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+        }
+    </script>
+</body>
+</html>
