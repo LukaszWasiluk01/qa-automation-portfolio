@@ -35,15 +35,12 @@ jobs:
       working-directory: ./e2e
       run: npm ci
 
-    - name: Install Playwright Browsers
+    - name: Install Playwright Browsers (Chromium only for CI)
       working-directory: ./e2e
-      run: npx playwright install --with-deps
+      run: npx playwright install chromium --with-deps
 
     - name: Start API Server
-      env:
-        ASPNETCORE_URLS: http://localhost:5141
-        ASPNETCORE_ENVIRONMENT: Testing
-      run: dotnet run --project src/IssueTracker.API/IssueTracker.API.csproj --no-launch-profile --urls "http://localhost:5141" &
+      run: dotnet run --project src/IssueTracker.API/IssueTracker.API.csproj --no-launch-profile --environment Testing --urls "http://localhost:5141" &
 
     - name: Wait for API to be ready
       run: |
