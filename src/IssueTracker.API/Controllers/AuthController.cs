@@ -1,6 +1,7 @@
 ﻿using BCrypt.Net;
 using IssueTracker.API.Data;
 using IssueTracker.API.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -39,7 +40,12 @@ namespace IssueTracker.API.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return Created();
+            return StatusCode(StatusCodes.Status201Created, new
+            {
+                id = user.Id,
+                email = user.Email,
+                role = user.Role.ToString()
+            });
         }
 
         [HttpPost("login")]
@@ -75,7 +81,23 @@ namespace IssueTracker.API.Controllers
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return Ok(new
             {
-                token = tokenHandler.WriteToken(token)
+                token = tokenHandler.WriteToken(token),
+                email = user.Email,
+                role = user.Role.ToString()
+            });
+        }
+
+        [Authorize]
+        [HttpGet("me")]
+        public IActionResult Me()
+        {
+            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+            var role = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            return Ok(new
+            {
+                email,
+                role
             });
         }
 

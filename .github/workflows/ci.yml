@@ -18,53 +18,35 @@ jobs:
       with:
         dotnet-version: '8.0.x'
 
-    - name: Build Backend
-      run: dotnet build src/IssueTracker.API/IssueTracker.API.csproj -c Release
+    - name: Restore backend
+      run: dotnet restore src/IssueTracker.Tests/IssueTracker.Tests.csproj
 
-    - name: Run xUnit Integration Tests
-      env:
-        ASPNETCORE_ENVIRONMENT: Testing
-      run: dotnet test src/IssueTracker.Tests/IssueTracker.Tests.csproj -c Release
+    - name: Build backend
+      run: dotnet build src/IssueTracker.Tests/IssueTracker.Tests.csproj -c Release --no-restore
+
+    - name: Run xUnit unit & integration tests
+      run: dotnet test src/IssueTracker.Tests/IssueTracker.Tests.csproj -c Release --no-build --verbosity normal
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '22'
 
-    - name: Install Frontend Dependencies
+    - name: Install E2E dependencies
       working-directory: ./e2e
       run: npm ci
 
-    - name: Install Playwright Browsers (Chromium only for CI)
+    - name: Install Playwright (Chromium)
       working-directory: ./e2e
       run: npx playwright install chromium --with-deps
 
-    - name: Start API Server
-      env:
-        ASPNETCORE_ENVIRONMENT: Testing
-      run: dotnet run --project src/IssueTracker.API/IssueTracker.API.csproj --no-launch-profile --environment Testing --urls "http://localhost:5141" > /tmp/issuetracker-api.log 2>&1 &
-
-    - name: Wait for API to be ready
-      run: |
-        for i in {1..60}; do
-          if curl -sSf http://localhost:5141/swagger/index.html > /dev/null; then
-            echo "API is up and running!"
-            exit 0
-          fi
-          echo "Waiting for API to start..."
-          sleep 2
-        done
-        echo "API did not start in time."
-        cat /tmp/issuetracker-api.log
-        exit 1
-
-    - name: Run Playwright Tests
+    - name: Run Playwright tests
       working-directory: ./e2e
       env:
-        CI: true
+        CI: 'true'
       run: npm test
 
-    - name: Upload Playwright Report
+    - name: Upload Playwright report
       uses: actions/upload-artifact@v4
       if: always()
       with:

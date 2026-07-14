@@ -2,73 +2,324 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Issue Tracker</title>
     <style>
-        body {
-            font-family: Arial;
-            padding: 20px;
+        :root {
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --accent: #6366f1;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --danger: #ef4444;
+            --border: #334155;
         }
 
-        .hidden {
-            display: none;
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
         }
+
+        header {
+            padding: 16px 24px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 { font-size: 20px; margin: 0; }
+        h2 { margin-top: 0; }
+
+        main { max-width: 900px; margin: 0 auto; padding: 24px; }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        input, select, button, textarea {
+            font-size: 14px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: #0b1220;
+            color: var(--text);
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        button {
+            background: var(--accent);
+            border: none;
+            cursor: pointer;
+            width: auto;
+            padding: 10px 18px;
+            color: #fff;
+        }
+
+        button.secondary { background: #475569; }
+        button.danger { background: var(--danger); }
+        button:hover { opacity: 0.9; }
+
+        .error { color: var(--danger); min-height: 18px; margin: 4px 0; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); }
+        th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            background: #334155;
+        }
+
+        .hidden { display: none; }
+
+        .row-actions { display: flex; gap: 8px; }
+        .row-actions button { padding: 6px 12px; margin: 0; font-size: 12px; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+        .muted { color: var(--muted); font-size: 13px; }
     </style>
 </head>
 <body>
-    <div id="login-section">
-        <h2>Login</h2>
-        <input type="email" id="email" data-testid="email-input" placeholder="Email" /><br><br>
-        <input type="password" id="password" data-testid="password-input" placeholder="Password" /><br><br>
-        <button data-testid="login-button" onclick="login()">Login</button>
-        <p id="error-message" data-testid="error-message" style="color:red;"></p>
-    </div>
+    <header>
+        <h1>Issue Tracker</h1>
+        <span id="session-info" class="muted"></span>
+    </header>
 
-    <div id="dashboard-section" class="hidden">
-        <h2 data-testid="dashboard-header">Dashboard</h2>
-        <input type="text" id="issue-title" data-testid="issue-title-input" placeholder="Issue Title" /><br><br>
-        <button data-testid="create-issue-button" onclick="createIssue()">Create Issue</button>
-        <button data-testid="logout-button" onclick="logout()">Logout</button>
-        <p id="issue-error" data-testid="issue-error" style="color:red;"></p>
-    </div>
+    <main>
+        <!-- LOGIN -->
+        <section id="login-section" class="card">
+            <h2>Sign in</h2>
+            <input type="email" id="email" data-testid="email-input" placeholder="Email" autocomplete="username" />
+            <input type="password" id="password" data-testid="password-input" placeholder="Password" autocomplete="current-password" />
+            <button data-testid="login-button" onclick="login()">Login</button>
+            <p class="error" id="error-message" data-testid="error-message"></p>
+            <p class="muted">Demo accounts (password: <code>TestPassword123!</code>): admin@issuetracker.com, tester@issuetracker.com, developer@issuetracker.com</p>
+        </section>
+
+        <!-- DASHBOARD -->
+        <section id="dashboard-section" class="hidden">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h2 data-testid="dashboard-header" style="margin:0;">Dashboard</h2>
+                    <div>
+                        <span class="badge" id="user-role" data-testid="user-role"></span>
+                        <button class="secondary" data-testid="logout-button" onclick="logout()">Logout</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Create issue</h2>
+                <div class="form-grid">
+                    <input type="text" id="issue-title" data-testid="issue-title-input" placeholder="Title" />
+                    <select id="issue-priority" data-testid="issue-priority-select">
+                        <option value="0">Low</option>
+                        <option value="1" selected>Medium</option>
+                        <option value="2">High</option>
+                        <option value="3">Critical</option>
+                    </select>
+                </div>
+                <textarea id="issue-description" data-testid="issue-description-input" placeholder="Description (optional)" rows="2"></textarea>
+                <button data-testid="create-issue-button" onclick="createIssue()">Create Issue</button>
+                <p class="error" id="issue-error" data-testid="issue-error"></p>
+            </div>
+
+            <div class="card">
+                <h2>Issues</h2>
+                <table data-testid="issues-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="issues-body"></tbody>
+                </table>
+            </div>
+
+            <div class="card hidden" id="details-card" data-testid="issue-details">
+                <h2>Issue details</h2>
+                <p><strong>Title:</strong> <span data-testid="details-title"></span></p>
+                <p><strong>Description:</strong> <span data-testid="details-description"></span></p>
+                <p><strong>Status:</strong> <span class="badge" data-testid="details-status"></span></p>
+                <p><strong>Priority:</strong> <span class="badge" data-testid="details-priority"></span></p>
+                <button class="secondary" data-testid="close-details-button" onclick="closeDetails()">Close</button>
+            </div>
+        </section>
+    </main>
 
     <script>
+        const STATUS = ['Open', 'InProgress', 'Resolved', 'Closed'];
+        const PRIORITY = ['Low', 'Medium', 'High', 'Critical'];
+
+        const state = { token: null, role: null, email: null };
+
+        function authHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${state.token}`
+            };
+        }
+
         async function login() {
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
+            const errorEl = document.getElementById('error-message');
+            errorEl.innerText = '';
 
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
+            if (!email || !password) {
+                errorEl.innerText = 'Email and password are required';
+                return;
+            }
 
-            if (response.ok) {
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (!response.ok) {
+                    errorEl.innerText = 'Invalid credentials';
+                    return;
+                }
+
                 const data = await response.json();
-                localStorage.setItem('token', data.token);
-                document.getElementById('login-section').classList.add('hidden');
-                document.getElementById('dashboard-section').classList.remove('hidden');
-                document.getElementById('error-message').innerText = '';
-            } else {
-                document.getElementById('error-message').innerText = 'Invalid credentials';
+                state.token = data.token;
+                state.role = data.role;
+                state.email = data.email;
+
+                showDashboard();
+                await loadIssues();
+            } catch (e) {
+                errorEl.innerText = 'Network error';
             }
         }
 
-        function createIssue() {
-            const title = document.getElementById('issue-title').value;
-            if (!title) {
-                document.getElementById('issue-error').innerText = 'Title is required';
-            } else {
-                document.getElementById('issue-error').innerText = 'Issue created!';
-                document.getElementById('issue-title').value = '';
-            }
+        function showDashboard() {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('dashboard-section').classList.remove('hidden');
+            document.getElementById('user-role').innerText = state.role;
+            document.getElementById('session-info').innerText = `${state.email} (${state.role})`;
         }
 
         function logout() {
-            localStorage.removeItem('token');
+            state.token = null;
+            state.role = null;
+            state.email = null;
             document.getElementById('dashboard-section').classList.add('hidden');
             document.getElementById('login-section').classList.remove('hidden');
             document.getElementById('email').value = '';
             document.getElementById('password').value = '';
+            document.getElementById('session-info').innerText = '';
+            document.getElementById('issues-body').innerHTML = '';
+        }
+
+        async function loadIssues() {
+            const response = await fetch('/api/issues', { headers: authHeaders() });
+            if (!response.ok) return;
+
+            const issues = await response.json();
+            const body = document.getElementById('issues-body');
+            body.innerHTML = '';
+
+            issues.forEach(issue => {
+                const tr = document.createElement('tr');
+                tr.setAttribute('data-testid', 'issue-row');
+                tr.setAttribute('data-issue-id', issue.id);
+
+                const deleteButton = state.role === 'Admin'
+                    ? `<button class="danger" data-testid="delete-issue-button" onclick="deleteIssue(${issue.id})">Delete</button>`
+                    : '';
+
+                tr.innerHTML = `
+                    <td>${issue.id}</td>
+                    <td data-testid="issue-title-cell">${escapeHtml(issue.title)}</td>
+                    <td><span class="badge" data-testid="issue-status-cell">${STATUS[issue.status]}</span></td>
+                    <td>${PRIORITY[issue.priority]}</td>
+                    <td class="row-actions">
+                        <button class="secondary" data-testid="view-issue-button" onclick="viewIssue(${issue.id})">View</button>
+                        ${deleteButton}
+                    </td>`;
+                body.appendChild(tr);
+            });
+        }
+
+        async function createIssue() {
+            const title = document.getElementById('issue-title').value.trim();
+            const description = document.getElementById('issue-description').value;
+            const priority = parseInt(document.getElementById('issue-priority').value, 10);
+            const errorEl = document.getElementById('issue-error');
+            errorEl.innerText = '';
+
+            if (!title) {
+                errorEl.innerText = 'Title is required';
+                return;
+            }
+
+            const response = await fetch('/api/issues', {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify({ title, description, priority })
+            });
+
+            if (response.status === 201) {
+                document.getElementById('issue-title').value = '';
+                document.getElementById('issue-description').value = '';
+                await loadIssues();
+            } else {
+                errorEl.innerText = 'Failed to create issue';
+            }
+        }
+
+        async function deleteIssue(id) {
+            const response = await fetch(`/api/issues/${id}`, {
+                method: 'DELETE',
+                headers: authHeaders()
+            });
+            if (response.status === 204) {
+                await loadIssues();
+            }
+        }
+
+        async function viewIssue(id) {
+            const response = await fetch(`/api/issues/${id}`, { headers: authHeaders() });
+            if (!response.ok) return;
+            const issue = await response.json();
+
+            document.querySelector('[data-testid="details-title"]').innerText = issue.title;
+            document.querySelector('[data-testid="details-description"]').innerText = issue.description || '(none)';
+            document.querySelector('[data-testid="details-status"]').innerText = STATUS[issue.status];
+            document.querySelector('[data-testid="details-priority"]').innerText = PRIORITY[issue.priority];
+            document.getElementById('details-card').classList.remove('hidden');
+        }
+
+        function closeDetails() {
+            document.getElementById('details-card').classList.add('hidden');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.innerText = text ?? '';
+            return div.innerHTML;
         }
     </script>
 </body>

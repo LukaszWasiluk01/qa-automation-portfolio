@@ -20,9 +20,21 @@ namespace IssueTracker.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] IssueStatus? status, [FromQuery] string? sort)
         {
-            return Ok(await _context.Issues.ToListAsync());
+            IQueryable<Issue> query = _context.Issues;
+
+            if (status.HasValue)
+                query = query.Where(i => i.Status == status.Value);
+
+            query = sort?.ToLowerInvariant() switch
+            {
+                "priority" => query.OrderByDescending(i => i.Priority),
+                "created" => query.OrderByDescending(i => i.CreatedAt),
+                _ => query.OrderBy(i => i.Id)
+            };
+
+            return Ok(await query.ToListAsync());
         }
 
         [HttpGet("{id}")]
@@ -38,6 +50,9 @@ namespace IssueTracker.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(Issue issue)
         {
+            issue.Id = 0;
+            issue.CreatedAt = DateTime.UtcNow;
+
             _context.Issues.Add(issue);
             await _context.SaveChangesAsync();
 
@@ -45,6 +60,24 @@ namespace IssueTracker.API.Controllers
             {
                 id = issue.Id
             }, issue);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, UpdateIssueDto request)
+        {
+            var issue = await _context.Issues.FindAsync(id);
+            if (issue == null)
+                return NotFound();
+
+            issue.Title = request.Title;
+            issue.Description = request.Description;
+            issue.Status = request.Status;
+            issue.Priority = request.Priority;
+            issue.AssigneeId = request.AssigneeId;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(issue);
         }
 
         [HttpPatch("{id}/status")]
@@ -81,6 +114,30 @@ namespace IssueTracker.API.Controllers
     public class UpdateStatusDto
     {
         public IssueStatus Status
+        {
+            get; set;
+        }
+    }
+
+    public class UpdateIssueDto
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Title is required")]
+        [System.ComponentModel.DataAnnotations.MaxLength(255, ErrorMessage = "Title exceeds maximum length")]
+        public string Title { get; set; } = string.Empty;
+
+        public string Description { get; set; } = string.Empty;
+
+        public IssueStatus Status
+        {
+            get; set;
+        }
+
+        public IssuePriority Priority
+        {
+            get; set;
+        }
+
+        public int? AssigneeId
         {
             get; set;
         }

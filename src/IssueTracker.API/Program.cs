@@ -1,5 +1,5 @@
-using BCrypt.Net;
 using IssueTracker.API.Data;
+using IssueTracker.API.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -19,9 +19,10 @@ namespace IssueTracker.API
 
             builder.Services.AddSwaggerGen(c =>
             {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Issue Tracker API", Version = "v1" });
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
-                    Description = "JWT Authorization header using the Bearer scheme.",
+                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
                     Name = "Authorization",
                     In = ParameterLocation.Header,
                     Type = SecuritySchemeType.Http,
@@ -45,7 +46,7 @@ namespace IssueTracker.API
             {
                 if (isTestingEnvironment)
                 {
-                    options.UseInMemoryDatabase("TestDb");
+                    options.UseInMemoryDatabase("IssueTrackerTestDb");
                 }
                 else
                 {
@@ -70,21 +71,19 @@ namespace IssueTracker.API
                     };
                 });
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                    policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+            });
+
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
             {
                 var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                if (!context.Users.Any(u => u.Email == "admin@issuetracker.com"))
-                {
-                    context.Users.Add(new IssueTracker.API.Models.User
-                    {
-                        Email = "admin@issuetracker.com",
-                        PasswordHash = BCrypt.Net.BCrypt.HashPassword("TestPassword123!"),
-                        Role = IssueTracker.API.Models.UserRole.Admin
-                    });
-                    context.SaveChanges();
-                }
+                context.Database.EnsureCreated();
+                DbSeeder.Seed(context);
             }
 
             if (app.Environment.IsDevelopment())
@@ -93,11 +92,16 @@ namespace IssueTracker.API
                 app.UseSwaggerUI();
             }
 
+            app.UseCors("AllowAll");
+
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            // Liveness endpoint used by CI to confirm the API is ready before running Playwright.
+            app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 
             app.MapControllers();
 

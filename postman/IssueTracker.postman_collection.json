@@ -178,6 +178,42 @@
 					}
 				},
 				{
+					"name": "Update Issue (PUT)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Title was updated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.title).to.eql(\"Updated via Postman\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated via Postman\",\n  \"description\": \"Full update\",\n  \"status\": 1,\n  \"priority\": 2\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/issues/{{issue_id}}",
+							"host": [ "{{baseUrl}}" ],
+							"path": [ "api", "issues", "{{issue_id}}" ]
+						}
+					}
+				},
+				{
 					"name": "Update Issue Status",
 					"event": [
 						{

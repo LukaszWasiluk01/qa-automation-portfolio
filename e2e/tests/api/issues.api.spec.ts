@@ -1,65 +1,85 @@
-import { test, expect } from '@playwright/test';
-import { issueData } from '../../fixtures/issueData';
+import { test, expect, APIRequestContext } from '@playwright/test';
+import { users } from '../../fixtures/users';
+import { issueData, uniqueTitle } from '../../fixtures/issueData';
 
-test.describe('Issues API endpoints', () => {
-  let token: string;
-  let createdIssueId: number;
+async function loginToken(request: APIRequestContext, email: string, password: string): Promise<string> {
+  const response = await request.post('/api/auth/login', { data: { email, password } });
+  expect(response.ok(), `Login failed with status ${response.status()}`).toBeTruthy();
+  return (await response.json()).token;
+}
 
-  test.beforeAll(async ({ request }) => {
-    const response = await request.post('/api/auth/login', {
-      data: {
-        email: 'admin@issuetracker.com',
-        password: 'TestPassword123!'
-      }
-    });
-
-    expect(response.ok(), `Login failed with status: ${response.status()}`).toBeTruthy();
-
-    const responseBody = await response.json();
-    token = responseBody.token;
-  });
-
-  test('Should reject access without token', async ({ request }) => {
+test.describe('Issues API (Playwright request)', () => {
+  test('rejects access without a token', async ({ request }) => {
     const response = await request.get('/api/issues');
     expect(response.status()).toBe(401);
   });
 
-  test('Should create a new issue via API', async ({ request }) => {
+  test('login returns a JWT token and role', async ({ request }) => {
+    const response = await request.post('/api/auth/login', {
+      data: { email: users.admin.email, password: users.admin.password }
+    });
+
+    expect(response.status()).toBe(200);
+    const body = await response.json();
+    expect(body.token).toBeTruthy();
+    expect(body.role).toBe('Admin');
+  });
+
+  test('creates a new issue and returns 201 with the payload', async ({ request }) => {
+    const token = await loginToken(request, users.admin.email, users.admin.password);
+    const title = uniqueTitle('API');
+
     const response = await request.post('/api/issues', {
       headers: { Authorization: `Bearer ${token}` },
-      data: issueData.validIssue
+      data: { ...issueData.validIssue, title }
     });
 
     expect(response.status()).toBe(201);
-    const responseBody = await response.json();
-    expect(responseBody.title).toBe(issueData.validIssue.title);
-
-    createdIssueId = responseBody.id;
+    const body = await response.json();
+    expect(body.title).toBe(title);
+    expect(body.id).toBeGreaterThan(0);
   });
 
-  test('Should reject issue creation without title', async ({ request }) => {
+  test('rejects issue creation without a title (400)', async ({ request }) => {
+    const token = await loginToken(request, users.tester.email, users.tester.password);
+
     const response = await request.post('/api/issues', {
       headers: { Authorization: `Bearer ${token}` },
       data: issueData.invalidIssue
     });
+
     expect(response.status()).toBe(400);
   });
 
-  test('Should retrieve issues list', async ({ request }) => {
+  test('retrieves the issues list as an array (200)', async ({ request }) => {
+    const token = await loginToken(request, users.tester.email, users.tester.password);
+
     const response = await request.get('/api/issues', {
       headers: { Authorization: `Bearer ${token}` }
     });
+
     expect(response.status()).toBe(200);
-    const responseBody = await response.json();
-    expect(Array.isArray(responseBody)).toBeTruthy();
+    expect(Array.isArray(await response.json())).toBeTruthy();
   });
 
-  test('Should delete the created issue', async ({ request }) => {
-    test.skip(!createdIssueId, 'Issue was not created');
+  test('supports a full create-read-delete lifecycle as admin', async ({ request }) => {
+    const token = await loginToken(request, users.admin.email, users.admin.password);
+    const headers = { Authorization: `Bearer ${token}` };
 
-    const response = await request.delete(`/api/issues/${createdIssueId}`, {
-      headers: { Authorization: `Bearer ${token}` }
+    const created = await request.post('/api/issues', {
+      headers,
+      data: { title: uniqueTitle('Lifecycle'), priority: 3 }
     });
-    expect([200, 204]).toContain(response.status());
+    expect(created.status()).toBe(201);
+    const id = (await created.json()).id;
+
+    const read = await request.get(`/api/issues/${id}`, { headers });
+    expect(read.status()).toBe(200);
+
+    const deleted = await request.delete(`/api/issues/${id}`, { headers });
+    expect(deleted.status()).toBe(204);
+
+    const readAgain = await request.get(`/api/issues/${id}`, { headers });
+    expect(readAgain.status()).toBe(404);
   });
 });

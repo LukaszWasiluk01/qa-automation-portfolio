@@ -6,22 +6,24 @@ export class LoginPage {
   readonly passwordInput: Locator;
   readonly loginButton: Locator;
   readonly errorMessage: Locator;
+  readonly loginSection: Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.emailInput = page.locator('input[type="email"], input[name="email"], #email');
-    this.passwordInput = page.locator('input[type="password"], input[name="password"], #password');
-    this.loginButton = page.locator('button, input[type="submit"], [role="button"]').filter({ hasText: /Login|Sign in|Submit/i });
-    this.errorMessage = page.locator('#error-message, [data-testid="error-message"], [data-testid="error"]');
+    this.emailInput = page.getByTestId('email-input');
+    this.passwordInput = page.getByTestId('password-input');
+    this.loginButton = page.getByTestId('login-button');
+    this.errorMessage = page.getByTestId('error-message');
+    this.loginSection = page.locator('#login-section');
   }
 
   async goto() {
-    await this.page.goto('/index.html');
+    await this.page.goto('/');
   }
 
   async login(email: string, password: string) {
-    await this.emailInput.first().fill(email);
-    await this.passwordInput.first().fill(password);
-    await this.loginButton.first().click();
+    await this.emailInput.fill(email);
+    await this.passwordInput.fill(password);
+    await this.loginButton.click();
   }
 }

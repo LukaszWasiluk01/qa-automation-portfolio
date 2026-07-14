@@ -1,48 +1,65 @@
 -- =================================================================
--- Issue Tracker - Sample SQL Queries for QA Validation
+-- Issue Tracker - Sample SQL Queries for QA Validation (SQL Server)
+-- =================================================================
+-- Schema matches the EF Core model. Enums are stored as integers:
+--   Users.Role      -> 0 Admin, 1 Tester, 2 Developer
+--   Issues.Status   -> 0 Open, 1 InProgress, 2 Resolved, 3 Closed
+--   Issues.Priority -> 0 Low, 1 Medium, 2 High, 3 Critical
+-- These queries are the kind a QA engineer runs to verify the database
+-- state after executing manual or automated tests.
 -- =================================================================
 
--- 1. SELECT & WHERE: Verify if a specific issue was created correctly
-SELECT Title, Status, Priority
+-- 1. SELECT & WHERE: verify a specific issue was created correctly
+SELECT Id, Title, Status, Priority
 FROM Issues
-WHERE IssueId = 101;
+WHERE Id = 1;
 
--- 2. COUNT & GROUP BY: Count how many issues are in each status (useful for dashboard validation)
-SELECT Status, COUNT(*) as IssueCount
+-- 2. COUNT & GROUP BY: how many issues are in each status (dashboard validation)
+SELECT Status, COUNT(*) AS IssueCount
 FROM Issues
 GROUP BY Status;
 
--- 3. INNER JOIN: Retrieve all issues along with the assigned user's email
-SELECT i.IssueId, i.Title, i.Status, u.Email as AssigneeEmail
+-- 3. INNER JOIN: issues together with the assigned user's email
+SELECT i.Id, i.Title, i.Status, u.Email AS AssigneeEmail
 FROM Issues i
-INNER JOIN Users u ON i.AssigneeId = u.UserId;
+INNER JOIN Users u ON i.AssigneeId = u.Id;
 
--- 4. LEFT JOIN / IS NULL: Find all "Unassigned" issues (issues without an Assignee)
-SELECT i.IssueId, i.Title
+-- 4. LEFT JOIN / IS NULL: find all unassigned issues
+SELECT i.Id, i.Title
 FROM Issues i
-LEFT JOIN Users u ON i.AssigneeId = u.UserId
+LEFT JOIN Users u ON i.AssigneeId = u.Id
 WHERE i.AssigneeId IS NULL;
 
--- 5. ORDER BY: Get top 5 most critical open issues
-SELECT IssueId, Title, Priority
+-- 5. ORDER BY + TOP: top 5 highest-priority open issues (Priority 2 High, 3 Critical)
+SELECT TOP 5 Id, Title, Priority
 FROM Issues
-WHERE Status = 'Open' AND Priority IN ('High', 'Critical')
-ORDER BY CreatedAt DESC
-LIMIT 5; -- Note: Use TOP 5 in SQL Server
+WHERE Status = 0 AND Priority IN (2, 3)
+ORDER BY Priority DESC, CreatedAt DESC;
 
--- 6. UPDATE: Simulate test data manipulation (Assigning an issue)
+-- 6. UPDATE: simulate test data manipulation (assign + move to InProgress)
 UPDATE Issues
-SET AssigneeId = 3, Status = 'InProgress'
-WHERE IssueId = 101;
+SET AssigneeId = 3, Status = 1
+WHERE Id = 1;
 
--- 7. DELETE: Data teardown after automated test execution
+-- 7. DELETE: data teardown after automated test execution (remove Closed issues)
 DELETE FROM Issues
-WHERE Status = 'Closed';
+WHERE Status = 3;
 
--- 8. Complex Query: Find Developers who have more than 1 issue assigned
-SELECT u.Username, COUNT(i.IssueId) as AssignedIssues
+-- 8. GROUP BY + HAVING: developers (Role = 2) with more than one assigned issue
+SELECT u.Email, COUNT(i.Id) AS AssignedIssues
 FROM Users u
-JOIN Issues i ON u.UserId = i.AssigneeId
-WHERE u.Role = 'Developer'
-GROUP BY u.Username
-HAVING COUNT(i.IssueId) > 1;
+INNER JOIN Issues i ON u.Id = i.AssigneeId
+WHERE u.Role = 2
+GROUP BY u.Email
+HAVING COUNT(i.Id) > 1;
+
+-- 9. Subquery: users who have no issues assigned to them
+SELECT Email, Role
+FROM Users
+WHERE Id NOT IN (SELECT DISTINCT AssigneeId FROM Issues WHERE AssigneeId IS NOT NULL);
+
+-- 10. Aggregate: total number of issues and how many are still open
+SELECT
+    COUNT(*) AS TotalIssues,
+    SUM(CASE WHEN Status = 0 THEN 1 ELSE 0 END) AS OpenIssues
+FROM Issues;

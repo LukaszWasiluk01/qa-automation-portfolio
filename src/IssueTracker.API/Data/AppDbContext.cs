@@ -15,5 +15,23 @@ namespace IssueTracker.API.Data
         {
             get; set;
         }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Enums (Role, Status, Priority) are persisted as their integer values,
+            // which is the EF Core default and matches the JSON contract used by the
+            // API and the Postman/Playwright tests. See /sql for the int -> name mapping.
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
+
+            modelBuilder.Entity<Issue>()
+                .HasOne(i => i.Assignee)
+                .WithMany()
+                .HasForeignKey(i => i.AssigneeId)
+                .OnDelete(DeleteBehavior.SetNull);
+        }
     }
 }
