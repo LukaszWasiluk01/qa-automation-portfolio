@@ -75,7 +75,7 @@ namespace IssueTracker.API
             using (var scope = app.Services.CreateScope())
             {
                 var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                if (isTestingEnvironment)
+                if (!context.Users.Any(u => u.Email == "admin@issuetracker.com"))
                 {
                     context.Users.Add(new IssueTracker.API.Models.User
                     {

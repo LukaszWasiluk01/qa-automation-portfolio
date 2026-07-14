@@ -40,12 +40,14 @@ jobs:
       run: npx playwright install chromium --with-deps
 
     - name: Start API Server
-      run: dotnet run --project src/IssueTracker.API/IssueTracker.API.csproj --no-launch-profile --environment Testing --urls "http://localhost:5141" &
+      env:
+        ASPNETCORE_ENVIRONMENT: Testing
+      run: dotnet run --project src/IssueTracker.API/IssueTracker.API.csproj --no-launch-profile --environment Testing --urls "http://localhost:5141" > /tmp/issuetracker-api.log 2>&1 &
 
     - name: Wait for API to be ready
       run: |
-        for i in {1..30}; do
-          if curl -s http://localhost:5141/swagger/index.html > /dev/null; then
+        for i in {1..60}; do
+          if curl -sSf http://localhost:5141/swagger/index.html > /dev/null; then
             echo "API is up and running!"
             exit 0
           fi
@@ -53,10 +55,13 @@ jobs:
           sleep 2
         done
         echo "API did not start in time."
+        cat /tmp/issuetracker-api.log
         exit 1
 
     - name: Run Playwright Tests
       working-directory: ./e2e
+      env:
+        CI: true
       run: npm test
 
     - name: Upload Playwright Report

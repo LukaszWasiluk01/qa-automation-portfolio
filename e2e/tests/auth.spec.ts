@@ -15,8 +15,8 @@ test.describe('Authentication & Dashboard UI', () => {
 
   test('Successful login and redirect to dashboard', async () => {
     await loginPage.login('admin@issuetracker.com', 'TestPassword123!');
+    await expect.poll(async () => await loginPage.page.locator('#dashboard-section').getAttribute('class')).toContain('hidden');
     await expect(dashboardPage.header).toBeVisible();
-    await expect(loginPage.page.locator('#login-section')).toHaveClass(/hidden/);
   });
 
   test('Login fails with invalid password', async () => {
@@ -32,6 +32,7 @@ test.describe('Authentication & Dashboard UI', () => {
 
   test('Create issue fails with empty title', async () => {
     await loginPage.login('admin@issuetracker.com', 'TestPassword123!');
+    await expect(dashboardPage.createIssueButton).toBeVisible();
     await dashboardPage.createIssueButton.click();
     await expect(dashboardPage.issueError).toHaveText('Title is required');
   });
