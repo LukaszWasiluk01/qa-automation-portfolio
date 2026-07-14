@@ -8,10 +8,7 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: bash
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
@@ -20,12 +17,6 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
-
-    - name: Install EF Core Tools
-      run: dotnet tool install --global dotnet-ef --version "8.0.*"
-
-    - name: Apply Database Migrations
-      run: dotnet ef database update --project src/IssueTracker.API/IssueTracker.API.csproj
 
     - name: Build Backend
       run: dotnet build src/IssueTracker.API/IssueTracker.API.csproj -c Release

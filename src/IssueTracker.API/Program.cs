@@ -38,8 +38,19 @@ namespace IssueTracker.API
                 });
             });
 
+            var isGitHubActions = Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true";
+
             builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            {
+                if (isGitHubActions)
+                {
+                    options.UseInMemoryDatabase("TestDb");
+                }
+                else
+                {
+                    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+                }
+            });
 
             var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is missing");
 
