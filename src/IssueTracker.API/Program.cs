@@ -1,3 +1,4 @@
+using BCrypt.Net;
 using IssueTracker.API.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -79,7 +80,7 @@ namespace IssueTracker.API
                     context.Users.Add(new IssueTracker.API.Models.User
                     {
                         Email = "admin@issuetracker.com",
-                        PasswordHash = "TestPassword123!",
+                        PasswordHash = BCrypt.Net.BCrypt.HashPassword("TestPassword123!"),
                         Role = IssueTracker.API.Models.UserRole.Admin
                     });
                     context.SaveChanges();

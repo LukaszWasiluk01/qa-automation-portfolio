@@ -47,6 +47,7 @@
                 localStorage.setItem('token', data.token);
                 document.getElementById('login-section').classList.add('hidden');
                 document.getElementById('dashboard-section').classList.remove('hidden');
+                document.getElementById('error-message').innerText = '';
             } else {
                 document.getElementById('error-message').innerText = 'Invalid credentials';
             }

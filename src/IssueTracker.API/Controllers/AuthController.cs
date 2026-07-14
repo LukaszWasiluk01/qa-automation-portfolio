@@ -1,4 +1,5 @@
-﻿using IssueTracker.API.Data;
+﻿using BCrypt.Net;
+using IssueTracker.API.Data;
 using IssueTracker.API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -31,7 +32,7 @@ namespace IssueTracker.API.Controllers
             var user = new User
             {
                 Email = request.Email,
-                PasswordHash = request.Password,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
                 Role = request.Role
             };
 
@@ -44,9 +45,14 @@ namespace IssueTracker.API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest request)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email && u.PasswordHash == request.Password);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
 
             if (user == null)
+                return Unauthorized("Invalid credentials");
+
+            var passwordValid = IsValidPassword(request.Password, user.PasswordHash);
+
+            if (!passwordValid)
                 return Unauthorized("Invalid credentials");
 
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -71,6 +77,19 @@ namespace IssueTracker.API.Controllers
             {
                 token = tokenHandler.WriteToken(token)
             });
+        }
+
+        private static bool IsValidPassword(string providedPassword, string storedPasswordHash)
+        {
+            if (string.IsNullOrWhiteSpace(storedPasswordHash))
+                return false;
+
+            if (storedPasswordHash.StartsWith("$2") || storedPasswordHash.StartsWith("$2a") || storedPasswordHash.StartsWith("$2b") || storedPasswordHash.StartsWith("$2y"))
+            {
+                return BCrypt.Net.BCrypt.Verify(providedPassword, storedPasswordHash);
+            }
+
+            return storedPasswordHash == providedPassword;
         }
     }
 }

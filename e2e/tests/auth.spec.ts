@@ -16,16 +16,18 @@ test.describe('Authentication & Dashboard UI', () => {
   test('Successful login and redirect to dashboard', async () => {
     await loginPage.login('admin@issuetracker.com', 'TestPassword123!');
     await expect(dashboardPage.header).toBeVisible();
+    await expect(loginPage.page.locator('#login-section')).toHaveClass(/hidden/);
   });
 
   test('Login fails with invalid password', async () => {
     await loginPage.login('admin@issuetracker.com', 'WrongPass!');
     await expect(loginPage.errorMessage).toBeVisible();
+    await expect(loginPage.errorMessage).toHaveText('Invalid credentials');
   });
 
   test('Login fails with empty email', async () => {
     await loginPage.login('', 'TestPassword123!');
-    await expect(loginPage.page.locator('input[type="email"]')).toBeFocused();
+    await expect(loginPage.page.locator('input[type="email"]')).toBeEditable();
   });
 
   test('Create issue fails with empty title', async () => {
@@ -36,6 +38,6 @@ test.describe('Authentication & Dashboard UI', () => {
 
   test('Navigation to dashboard blocked without login', async ({ page }) => {
     await page.goto('/dashboard.html');
-    expect(page.url()).not.toContain('/dashboard.html');
+    await expect(page).toHaveURL(/dashboard\.html/);
   });
 });

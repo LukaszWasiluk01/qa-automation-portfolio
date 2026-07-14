@@ -12,6 +12,9 @@ test.describe('Issues API endpoints', () => {
         password: 'TestPassword123!'
       }
     });
+
+    expect(response.ok(), `Login failed with status: ${response.status()}`).toBeTruthy();
+
     const responseBody = await response.json();
     token = responseBody.token;
   });

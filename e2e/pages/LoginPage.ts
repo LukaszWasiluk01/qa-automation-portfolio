@@ -9,10 +9,10 @@ export class LoginPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.emailInput = page.locator('input[type="email"]');
-    this.passwordInput = page.locator('input[type="password"]');
-    this.loginButton = page.locator('button[type="submit"]');
-    this.errorMessage = page.locator('.error-message');
+    this.emailInput = page.locator('input[type="email"], input[name="email"], #email');
+    this.passwordInput = page.locator('input[type="password"], input[name="password"], #password');
+    this.loginButton = page.locator('button, input[type="submit"], [role="button"]').filter({ hasText: /Login|Sign in|Submit/i });
+    this.errorMessage = page.locator('#error-message, [data-testid="error-message"], [data-testid="error"]');
   }
 
   async goto() {
@@ -20,8 +20,8 @@ export class LoginPage {
   }
 
   async login(email: string, password: string) {
-    await this.emailInput.fill(email);
-    await this.passwordInput.fill(password);
-    await this.loginButton.click();
+    await this.emailInput.first().fill(email);
+    await this.passwordInput.first().fill(password);
+    await this.loginButton.first().click();
   }
 }
