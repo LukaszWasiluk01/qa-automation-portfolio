@@ -9,7 +9,8 @@ test.describe('Authentication & Dashboard UI', () => {
   test.beforeEach(async ({ page }) => {
     loginPage = new LoginPage(page);
     dashboardPage = new DashboardPage(page);
-    await loginPage.navigate();
+
+    await loginPage.goto();
   });
 
   test('Successful login and redirect to dashboard', async () => {

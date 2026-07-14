@@ -9,14 +9,14 @@ export class LoginPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.emailInput = page.getByTestId('email-input');
-    this.passwordInput = page.getByTestId('password-input');
-    this.loginButton = page.getByTestId('login-button');
-    this.errorMessage = page.getByTestId('error-message');
+    this.emailInput = page.locator('input[type="email"]');
+    this.passwordInput = page.locator('input[type="password"]');
+    this.loginButton = page.locator('button[type="submit"]');
+    this.errorMessage = page.locator('.error-message');
   }
 
   async goto() {
-    await this.page.goto('/');
+    await this.page.goto('/index.html');
   }
 
   async login(email: string, password: string) {
